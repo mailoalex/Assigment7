@@ -8,6 +8,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+        // TODO: this should be read from string resource or a generator method
         val list_books = BookList()
         list_books.add(Book("Sublime","Yvor Wasbey"))
         list_books.add(Book("Smoke","Tanny Petteford"))
