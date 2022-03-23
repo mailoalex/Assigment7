@@ -1,6 +1,8 @@
 package edu.temple.audiobookplayer
 
-class BookList {
+import java.io.Serializable
+
+class BookList : Serializable {
     var books = ArrayList<Book>()
 
     // add book to book list
@@ -22,9 +24,6 @@ class BookList {
     fun size() : Int {
         return books.size
     }
-
-
-
 
 
 

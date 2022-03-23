@@ -2,6 +2,8 @@ package edu.temple.audiobookplayer
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,5 +25,11 @@ class MainActivity : AppCompatActivity() {
 
 
 
+        val f = BookListFragment.newInstance(list_books)
+
+
+        supportFragmentManager.beginTransaction()
+            .add(R.id.fragmentContainerView, f )
+            .commit()
     }
 }
