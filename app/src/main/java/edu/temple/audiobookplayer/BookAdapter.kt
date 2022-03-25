@@ -37,7 +37,7 @@ class BookAdapter ( _book_list: BookList, _callback: (Book) -> Unit): RecyclerVi
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         // Inflate layout file instead of creating views in code
         val layout = LayoutInflater.from(parent.context)
-            .inflate(R.layout.display_list_item ,parent, false)
+            .inflate(R.layout.list_item ,parent, false)
 
 
         return BookViewHolder(layout)

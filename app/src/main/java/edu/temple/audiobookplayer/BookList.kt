@@ -10,6 +10,11 @@ class BookList : Serializable {
         books.add(_book)
     }
 
+
+    fun indexOf( _book: Book) : Int {
+        return books.indexOf(_book)
+    }
+
     // remove book from book list
     fun remove(_book: Book){
         books.remove(_book)

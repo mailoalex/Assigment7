@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragmentContainerView"
+        android:id="@+id/port_frag"
         android:name="edu.temple.audiobookplayer.BookListFragment"
         android:layout_width="308dp"
         android:layout_height="wrap_content"
