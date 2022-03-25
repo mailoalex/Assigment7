@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class BookAdapter ( _book_list: BookList, _callback: (Book) -> Unit): RecyclerView.Adapter<RecyclerView.ViewHolder>(){
-    // TODO: this should be read from string resource or a generator method
+
     val books = _book_list
     val callback = _callback
 

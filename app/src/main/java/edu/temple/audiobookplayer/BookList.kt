@@ -29,6 +29,29 @@ class BookList : Serializable {
     fun size() : Int {
         return books.size
     }
+    
+    fun generate_books() : BookList{
+        books.add(Book("Smoke", "Tanny Petteford"))
+        books.add(Book(" The Old Gun", "Yvor Wasbey"))
+        books.add(Book("Meatballs Part II", "Gisela Urquhart"))
+        books.add(Book("Phantasm II", "Trudi Rochell"))
+        books.add(Book("Fudoh", "Lynnette McBay"))
+        books.add(Book("Sanctum", "Lindy Orcas"))
+        books.add(Book("Just a Sigh", "Jesselyn Vallintine"))
+        books.add(Book("Sublime", "Yvor Wasbey"))
+        books.add(Book("Miehen tie", "Griffin McCree"))
+        books.add(Book("Smoke", "Tanny Petteford"))
+        books.add(Book(" The Old Gun", "Yvor Wasbey"))
+        books.add(Book("Meatballs Part II", "Gisela Urquhart"))
+        books.add(Book("Phantasm II", "Trudi Rochell"))
+        books.add(Book("Fudoh", "Lynnette McBay"))
+        books.add(Book("Sanctum", "Lindy Orcas"))
+        books.add(Book("Just a Sigh", "Jesselyn Vallintine"))
+        books.add(Book("Sublime", "Yvor Wasbey"))
+        books.add(Book("Miehen tie", "Griffin McCree"))
+        return this
+
+    }
 
 
 
