@@ -21,7 +21,7 @@ class BookList : Serializable {
     }
 
     // get book with index
-    fun get(_index: Int ) : Book{
+    operator fun get(_index: Int ) : Book{
         return books.get(_index)
     }
 
@@ -31,6 +31,18 @@ class BookList : Serializable {
     }
     
 
+
+    override fun toString(): String {
+        return books.toString()
+    }
+
+    fun generate_books() : BookList{
+        repeat(20) {
+            books.add(Book("title $it", "author $it", it, "adsad"))
+        }
+        return this
+
+    }
 
 
 
