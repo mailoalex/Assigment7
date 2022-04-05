@@ -3,9 +3,13 @@ package edu.temple.audiobookplayer
 import android.app.SearchManager
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.net.URL
 
@@ -14,92 +18,95 @@ class MainActivity : AppCompatActivity() {
 
     lateinit  var viewmodel : BookViewModel
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-
-        if (intent != null) {
-            handleIntent(intent)
-        }
-
-
-    }
 
     private fun isPortraitMode(): Boolean {
         return supportFragmentManager.findFragmentById(R.id.container2) == null
     }
 
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //        // get a handle on viewmodel
+
         viewmodel = ViewModelProvider(this).get(BookViewModel::class.java)
-        //        viewmodel.isLand.value = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
 
         // to search for books
         handleIntent(intent)
 
-       val list_books = BookList().generate_books()
+
+
+        if(savedInstanceState == null){
+
+            if(viewmodel.book_list.value!= null) {
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.container1, BookListFragment.newInstance(viewmodel.book_list.value!!))
+                    .commit()
+            }
 
 
 
-
-
-        if(viewmodel.book_list.value!= null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.container1, BookListFragment.newInstance(viewmodel.book_list.value!!))
-                .commit()
-        }else{
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.container1, BookListFragment.newInstance(list_books))
-                .commit()
         }
 
+        if(isPortraitMode()) {
+            if(!viewmodel.is_empty()){
+                val fg = BookDetailsFragment()
+                fg.book = viewmodel.selected_book.value
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.container1, fg )
+                    .commit()
+            }
 
-
-        if(!isPortraitMode()){
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.container2,BookDetailsFragment())
-                .commit()
+        }else{ // landscape
+            if(viewmodel.is_empty()) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.container2,BookDetailsFragment())
+                    .commit()
+            }else{
+                val fg = BookDetailsFragment()
+                fg.book = viewmodel.selected_book.value
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.container2, fg )
+                    .addToBackStack(null)
+                    .commit()
+            }
         }
 
-
-
-
-
-
-
-        val button = findViewById<Button>(R.id.button)
-
-
-
-
-
-
-
-
-        button.setOnClickListener {
+        findViewById<Button>(R.id.button).setOnClickListener {
             onSearchRequested()
         }
 
 
-        //container 1 is list . container2 is detail
+
 
 
         viewmodel.book_list.observe(this) {
+            Log.d("ALEX", "CHANGED BOOKS $it")
             (supportFragmentManager.findFragmentById(R.id.container1) as BookListFragment).adapter?.refresh(it!!)
         }
 
 
         viewmodel.selected_book.observe(this) {
+            Log.d("ALEX", "SELECTED BOOK ${it.title}")
             if(isPortraitMode()){
+
+                if(!viewmodel.is_empty()){
+                    val fg = BookDetailsFragment()
+                    fg.book = it
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.container1, fg )
+                        .addToBackStack(null)
+                        .commit()
+                }
+
+            }else{
                 val fg = BookDetailsFragment()
                 fg.book = it
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.container1, fg )
+                    .replace(R.id.container2, fg )
                     .addToBackStack(null)
-                    .setReorderingAllowed(true)
                     .commit()
             }
 
@@ -126,32 +133,38 @@ class MainActivity : AppCompatActivity() {
     {
 
 
-        Thread{
-
-            val url = URL("https://kamorris.com/lab/cis3515/search.php?term=$query")
-            val array = JSONArray( url.readText())
-
+        runBlocking {
             val books = BookList()
+            withContext(Dispatchers.IO) {
 
-            for (i in 0 until array.length()) {
-                val book = array.getJSONObject(i)
-                books.add(
-                    Book(
-                        book.getString("title") ,
-                        book.getString("author") ,
-                        book.getInt("id") ,
-                        book.getString("cover_url"),
+                val url = URL("https://kamorris.com/lab/cis3515/search.php?term=$query")
+                val array = JSONArray( url.readText())
 
+
+
+                for (i in 0 until array.length()) {
+                    val book = array.getJSONObject(i)
+                    books.add(
+                        Book(
+                            book.getString("title") ,
+                            book.getString("author") ,
+                            book.getInt("id") ,
+                            book.getString("cover_url"),
+
+                            )
                     )
-                )
+
+                }
 
             }
 
-           viewmodel.book_list.postValue(books)
+
+            viewmodel.book_list.value = books
+
+        }
 
 
 
-        }.start()
 
 
 
