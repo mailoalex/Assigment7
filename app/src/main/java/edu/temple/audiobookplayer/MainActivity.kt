@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 
+
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -14,8 +15,8 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.net.URL
 
-
 class MainActivity : AppCompatActivity() {
+
 
     lateinit var viewmodel: BookViewModel
 
@@ -23,6 +24,9 @@ class MainActivity : AppCompatActivity() {
     private fun isSingleMode(): Boolean {
         return resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
     }
+
+
+
 
 
 //    override fun onBackPressed() {
@@ -36,12 +40,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+
         viewmodel = ViewModelProvider(this).get(BookViewModel::class.java)
 
 
 
 
-        findViewById<Button>(R.id.button).setOnClickListener {
+        findViewById<Button>(R.id.search).setOnClickListener {
             onSearchRequested()
         }
 
