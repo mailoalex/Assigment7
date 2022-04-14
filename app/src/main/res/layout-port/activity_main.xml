@@ -9,12 +9,12 @@
         android:id="@+id/container1"
         android:name="edu.temple.audiobookplayer.BookListFragment"
         android:layout_width="323dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
+        android:layout_height="400dp"
+        android:layout_marginTop="32dp"
         android:background="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/play" />
+        app:layout_constraintTop_toBottomOf="@+id/seekbar" />
 
     <Button
         android:id="@+id/search"
@@ -56,5 +56,14 @@
         app:icon="@android:drawable/ic_media_pause"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/search" />
+
+    <SeekBar
+        android:id="@+id/seekbar"
+        android:layout_width="285dp"
+        android:layout_height="18dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/play" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

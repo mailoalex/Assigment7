@@ -49,6 +49,7 @@ class BookListFragment : Fragment() {
                 )
 
             }
+            recycler.setNestedScrollingEnabled(false);
             recycler.adapter = adapter
             recycler.layoutManager = LinearLayoutManager(requireActivity())
             viewmodel!!.bookList.observe(requireActivity()){

@@ -40,11 +40,11 @@ class BookList : Serializable {
         books =  callback(str).books
         
     }
-    fun randomData(){
-        repeat(20){
-            books.add(Book("title $it", "author $it", it, "a"))
-        }
-    }
+//    fun randomData(){
+//        repeat(20){
+//            books.add(Book("title $it", "author $it", it, "a"))
+//        }
+//    }
 
 
 

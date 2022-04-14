@@ -12,6 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AudioBookPlayer">
+        <service
+            android:name=".BookServicePlayer"
+            android:enabled="true"
+            android:exported="false"></service>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
@@ -28,5 +32,7 @@
                 android:resource="@xml/searchable"/>
         </activity>
     </application>
+
+
 
 </manifest>
