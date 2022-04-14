@@ -55,6 +55,8 @@ class BookDetailsFragment(): Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
+
         if(book!=null){
             updateBook(book!!)
         }
@@ -103,7 +105,7 @@ class BookDetailsFragment(): Fragment() {
 
         @JvmStatic
         fun newInstance(_book: Book) =
-            BookListFragment().apply {
+            BookDetailsFragment().apply {
                 arguments = Bundle().apply {
                     putSerializable("book", _book)
                 }

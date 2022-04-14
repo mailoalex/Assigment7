@@ -36,12 +36,14 @@ class BookList : Serializable {
         return books.toString()
     }
 
-    fun generate_books() : BookList{
-        repeat(20) {
-            books.add(Book("title $it", "author $it", it, "adsad"))
+    fun generateBooks(  str: String, callback: (String) -> BookList){
+        books =  callback(str).books
+        
+    }
+    fun randomData(){
+        repeat(20){
+            books.add(Book("title $it", "author $it", it, "a"))
         }
-        return this
-
     }
 
 

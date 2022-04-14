@@ -1,5 +1,6 @@
 package edu.temple.audiobookplayer
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,8 +25,10 @@ class BookAdapter ( _book_list: BookList, _callback: (Book) -> Unit): RecyclerVi
         }
     }
 
-    fun refresh(newBookList: BookList){
-        books = newBookList
+
+
+    fun updateBooks(_bookList: BookList){
+        books = _bookList
         notifyDataSetChanged()
     }
 
@@ -36,9 +39,9 @@ class BookAdapter ( _book_list: BookList, _callback: (Book) -> Unit): RecyclerVi
         holder.book = books.get( position)
         holder.title.text = books[position].title
         holder.author.text = books[position].author
-
-
     }
+
+
 
 
 

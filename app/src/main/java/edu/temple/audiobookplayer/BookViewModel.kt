@@ -1,24 +1,32 @@
 package edu.temple.audiobookplayer
 
-import androidx.lifecycle.LiveData
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class BookViewModel : ViewModel() {
 
 
-    var selected_book  = MutableLiveData<Book>()
-    val book_list: MutableLiveData<BookList> by lazy {
+    var selectedBook  = MutableLiveData<Book>()
+    val bookList: MutableLiveData<BookList> by lazy {
         MutableLiveData<BookList>()
     }
 
+    fun updateBooks(_bookList: BookList){
 
-    fun update_book(newBook: Book?) {
-        selected_book.value = newBook!!
+        bookList.value = _bookList
+        Log.d("alex", "view model changed books ${bookList.value}")
     }
 
-    fun is_empty() : Boolean {
-        return selected_book.value == null
+    fun updateBook(newBook: Book?) {
+        Log.d("alex", "view model changed book ${newBook}")
+        if(newBook == null){
+            return
+        }
+        selectedBook.value = newBook!!
+
     }
+
+
 
 }

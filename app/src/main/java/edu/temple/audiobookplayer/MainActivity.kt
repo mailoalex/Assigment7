@@ -2,10 +2,11 @@ package edu.temple.audiobookplayer
 
 import android.app.SearchManager
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -16,13 +17,18 @@ import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit  var viewmodel : BookViewModel
+    lateinit var viewmodel: BookViewModel
 
 
-    private fun isPortraitMode(): Boolean {
-        return supportFragmentManager.findFragmentById(R.id.container2) == null
+    private fun isSingleMode(): Boolean {
+        return resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
     }
 
+
+//    override fun onBackPressed() {
+//        super.onBackPressed()
+//        viewmodel.updateBook(null)
+//    }
 
 
 
@@ -33,46 +39,7 @@ class MainActivity : AppCompatActivity() {
         viewmodel = ViewModelProvider(this).get(BookViewModel::class.java)
 
 
-        // to search for books
-        handleIntent(intent)
 
-
-
-        if(savedInstanceState == null){
-
-            if(viewmodel.book_list.value!= null) {
-                supportFragmentManager.beginTransaction()
-                    .add(R.id.container1, BookListFragment.newInstance(viewmodel.book_list.value!!))
-                    .commit()
-            }
-
-
-
-        }
-
-        if(isPortraitMode()) {
-            if(!viewmodel.is_empty()){
-                val fg = BookDetailsFragment()
-                fg.book = viewmodel.selected_book.value
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.container1, fg )
-                    .commit()
-            }
-
-        }else{ // landscape
-            if(viewmodel.is_empty()) {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.container2,BookDetailsFragment())
-                    .commit()
-            }else{
-                val fg = BookDetailsFragment()
-                fg.book = viewmodel.selected_book.value
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.container2, fg )
-                    .addToBackStack(null)
-                    .commit()
-            }
-        }
 
         findViewById<Button>(R.id.button).setOnClickListener {
             onSearchRequested()
@@ -80,48 +47,65 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
-
-        viewmodel.book_list.observe(this) {
-            Log.d("ALEX", "CHANGED BOOKS $it")
-            (supportFragmentManager.findFragmentById(R.id.container1) as BookListFragment).adapter?.refresh(it!!)
+        if(savedInstanceState ==null) {
+            val bl = BookList()
+            bl.generateBooks("a"){
+                searchBooks(it)
+            }
+            supportFragmentManager.beginTransaction()
+                .add(R.id.container1, BookListFragment.newInstance(bl))
+                .commit()
+        }else{
+            if(isSingleMode() && viewmodel.selectedBook.value != null) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.container1, BookDetailsFragment())
+                    .setReorderingAllowed(true)
+                    .addToBackStack(null)
+                    .commit()
+            }
         }
 
 
-        viewmodel.selected_book.observe(this) {
-            Log.d("ALEX", "SELECTED BOOK ${it.title}")
-            if(isPortraitMode()){
 
-                if(!viewmodel.is_empty()){
-                    val fg = BookDetailsFragment()
-                    fg.book = it
+        if(!isSingleMode()  ){
+            supportFragmentManager.beginTransaction()
+                .add(R.id.container2, BookDetailsFragment())
+                .commit()
+        }
+
+        viewmodel.selectedBook.observe(this){
+
+            if(it != null){
+
+                val fg = BookDetailsFragment()
+                fg.book = it!!
+
+
+                if(isSingleMode() ) {
+
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.container1, fg )
+                        .replace(R.id.container1,fg)
+                        .addToBackStack(null)
+                        .commit()
+                }else{
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.container2, fg)
                         .addToBackStack(null)
                         .commit()
                 }
-
-            }else{
-                val fg = BookDetailsFragment()
-                fg.book = it
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.container2, fg )
-                    .addToBackStack(null)
-                    .commit()
             }
 
         }
 
-
-
-
-
-
-
     }
 
-    private  fun handleIntent( intent : Intent) {
-        if(Intent.ACTION_SEARCH == intent.action) {
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleIntent(intent!!)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        if (Intent.ACTION_SEARCH == intent.action) {
             intent.getStringExtra(SearchManager.QUERY)?.also { query ->
                 searchBooks(query)
             }
@@ -129,16 +113,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun searchBooks( query: String)
-    {
 
 
+    private fun searchBooks(query: String): BookList {
+        supportFragmentManager.popBackStack()
+        val books = BookList()
         runBlocking {
-            val books = BookList()
-            withContext(Dispatchers.IO) {
 
+            withContext(Dispatchers.IO) {
                 val url = URL("https://kamorris.com/lab/cis3515/search.php?term=$query")
-                val array = JSONArray( url.readText())
+                val array = JSONArray(url.readText())
 
 
 
@@ -146,9 +130,9 @@ class MainActivity : AppCompatActivity() {
                     val book = array.getJSONObject(i)
                     books.add(
                         Book(
-                            book.getString("title") ,
-                            book.getString("author") ,
-                            book.getInt("id") ,
+                            book.getString("title"),
+                            book.getString("author"),
+                            book.getInt("id"),
                             book.getString("cover_url"),
 
                             )
@@ -159,19 +143,17 @@ class MainActivity : AppCompatActivity() {
             }
 
 
-            viewmodel.book_list.value = books
+            viewmodel.updateBooks(
+                books
+            )
+
 
         }
 
-
-
-
+        return books
 
 
     }
-
-
-
 
 
 }
