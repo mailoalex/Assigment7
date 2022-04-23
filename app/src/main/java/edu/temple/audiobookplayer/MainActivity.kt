@@ -27,24 +27,36 @@ import java.net.URL
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binder: PlayerService.MediaControlBinder
+    private lateinit var playerService: PlayerService
     private var isBounded: Boolean = false
 
-    private var isPlaying: Boolean = false
-    private var isPaused: Boolean = false
-    private var isStopped: Boolean = false
-    lateinit private var handler : Handler
+
+     private var handler : Handler= Handler(Looper.getMainLooper()){
+         if(isBounded && binder.isPlaying){
+            it.obj?.let {
+                val bp = it as PlayerService.BookProgress
+
+                findViewById<SeekBar>(R.id.seekbar).setProgress(
+                    bp.progress, true
+                )
+            }
+         }
+         true
+     }
 
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
 
+
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
+
             binder = service as PlayerService.MediaControlBinder
+
 
             isBounded = true
 
-//            binder.setProgressHandler(handler)
+           binder.setProgressHandler(handler)
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -147,9 +159,7 @@ class MainActivity : AppCompatActivity() {
 
                     if(isBounded){
                         binder.play(book.id)
-                        isPlaying = true
-                        isPaused = false
-                        isStopped = false
+
                     }
 
 
@@ -158,8 +168,11 @@ class MainActivity : AppCompatActivity() {
 
 
                 findViewById<SeekBar>(R.id.seekbar).setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
-                    override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                        binder.seekTo(p1)
+                    override fun onProgressChanged(p0: SeekBar?, p1: Int, changedByUser: Boolean) {
+                        if(changedByUser){
+                            binder.seekTo(p1)
+
+                        }
 
                     }
 
