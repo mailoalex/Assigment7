@@ -89,6 +89,11 @@ class MainActivity : AppCompatActivity() {
 
 
 
+        var donwloadedBooks: Set<Book>  = emptySet()
+
+
+
+
 
         viewmodel = ViewModelProvider(this).get(BookViewModel::class.java)
 
@@ -103,9 +108,13 @@ class MainActivity : AppCompatActivity() {
 
         if(savedInstanceState ==null) {
             val bl = BookList()
-            bl.generateBooks("a"){
-                searchBooks(it)
+            val possibleQuery = getPreferences(Context.MODE_PRIVATE).getString("QUERY", "")
+            if ( possibleQuery != "") {
+                bl.generateBooks("a"){
+                    searchBooks(possibleQuery!!)
+                }
             }
+
             supportFragmentManager.beginTransaction()
                 .add(R.id.container1, BookListFragment.newInstance(bl))
                 .commit()
@@ -148,28 +157,26 @@ class MainActivity : AppCompatActivity() {
                 }
 
 
-
-
-
-
                 findViewById<SeekBar>(R.id.seekbar).setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
                     override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                        binder.seekTo(p1)
 
                     }
 
                     override fun onStartTrackingTouch(p0: SeekBar?) {
-                        TODO("Not yet implemented")
+
                     }
 
                     override fun onStopTrackingTouch(p0: SeekBar?) {
-                        TODO("Not yet implemented")
+
                     }
 
                 })
                 findViewById<Button>(R.id.pause).setOnClickListener {
 
-
-                        binder.pause()
+                        if(isBounded){
+                            binder.pause()
+                        }
 
 
 
@@ -213,10 +220,24 @@ class MainActivity : AppCompatActivity() {
     private fun handleIntent(intent: Intent) {
         if (Intent.ACTION_SEARCH == intent.action) {
             intent.getStringExtra(SearchManager.QUERY)?.also { query ->
+
+                //TODO: add results to local storage
+
+                val shared = getPreferences(Context.MODE_PRIVATE)?: return
+
+                with(shared.edit()){
+                    putString("QUERY",query)
+                    apply()
+                }
                 searchBooks(query)
+
             }
 
         }
+    }
+
+    fun downloadBookWithId(id: Int) {
+
     }
 
 
