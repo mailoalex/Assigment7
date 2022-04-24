@@ -1,15 +1,15 @@
 package edu.temple.audiobookplayer
 
+import android.app.DownloadManager
 import android.app.SearchManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.res.Configuration
-import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
-import android.os.Looper
+import android.net.Uri
+import android.os.*
+import android.util.Log
 import android.widget.Button
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
@@ -22,14 +22,14 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binder: PlayerService.MediaControlBinder
-    private lateinit var playerService: PlayerService
     private var isBounded: Boolean = false
-
+    lateinit var viewmodel: BookViewModel
 
      private var handler : Handler= Handler(Looper.getMainLooper()){
          if(isBounded && binder.isPlaying){
@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    lateinit var viewmodel: BookViewModel
+
 
 
     private fun isSingleMode(): Boolean {
@@ -88,10 +88,32 @@ class MainActivity : AppCompatActivity() {
 
 
 
-//    override fun onBackPressed() {
-//        super.onBackPressed()
-//        viewmodel.updateBook(null)
-//    }
+    override fun onBackPressed() {
+        super.onBackPressed()
+        viewmodel.updateBook(null)
+
+        // stop if playing
+        if(binder.isPlaying){
+            binder.stop()
+        }
+
+        findViewById<SeekBar>(R.id.seekbar).setProgress(0, true)
+
+
+
+    }
+
+    private fun hasBookBeenDownloaded(id:Int): Boolean {
+        val downloaded = applicationContext.getExternalFilesDir(
+            Environment.DIRECTORY_AUDIOBOOKS
+
+        )
+
+        val f = File("${downloaded?.path}/$id.mp3")
+
+        return f.exists()
+
+    }
 
 
 
@@ -101,7 +123,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        var donwloadedBooks: Set<Book>  = emptySet()
+
 
 
 
@@ -148,6 +170,9 @@ class MainActivity : AppCompatActivity() {
                 .commit()
         }
 
+
+        //TODO: Save position of playing books
+        
         viewmodel.selectedBook.observe(this){
 
             if(it != null){
@@ -156,11 +181,27 @@ class MainActivity : AppCompatActivity() {
 
 
                 findViewById<Button>(R.id.play).setOnClickListener {
+                    Log.d("ALEX", "HAS BEEN DOWNLOADED ${hasBookBeenDownloaded(book.id).toString()} ")
+                    if(hasBookBeenDownloaded(book.id)){
+                        val downloaded = applicationContext.getExternalFilesDir(
+                            Environment.DIRECTORY_AUDIOBOOKS
 
-                    if(isBounded){
-                        binder.play(book.id)
+                        )
 
+                        val f = File("${downloaded?.path}/${book.id}.mp3")
+                        Log.d("ALEX", "PLAYING FROM FILE")
+                        binder.play(
+                            f,0
+                        )
+                    }else{
+                        if(isBounded){
+                            binder.play(book.id)
+                        }
+                        downloadBookWithId(book.id)
                     }
+
+
+
 
 
 
@@ -203,7 +244,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val fg = BookDetailsFragment()
-                fg.book = it!!
+                fg.book = it
 
 
 
@@ -234,7 +275,7 @@ class MainActivity : AppCompatActivity() {
         if (Intent.ACTION_SEARCH == intent.action) {
             intent.getStringExtra(SearchManager.QUERY)?.also { query ->
 
-                //TODO: add results to local storage
+
 
                 val shared = getPreferences(Context.MODE_PRIVATE)?: return
 
@@ -249,7 +290,31 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun downloadBookWithId(id: Int) {
+
+
+    private fun downloadBookWithId(id: Int) {
+
+        runBlocking {
+
+            withContext(Dispatchers.IO){
+                val req = DownloadManager.Request(
+                    Uri.parse("https://kamorris.com/lab/audlib/download.php?id=$id")
+                )
+                req.setTitle("downloading book $id")
+                req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+
+                req.setDestinationInExternalFilesDir(applicationContext, Environment.DIRECTORY_AUDIOBOOKS,
+                    "$id.mp3"
+                )
+
+                val manager = applicationContext.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+                manager.enqueue(req)
+            }
+
+        }
+
+
+
 
     }
 
