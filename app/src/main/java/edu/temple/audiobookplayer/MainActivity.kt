@@ -10,6 +10,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.*
 import android.util.Log
+
 import android.widget.Button
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
@@ -29,9 +30,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binder: PlayerService.MediaControlBinder
     private var isBounded: Boolean = false
-    lateinit var viewmodel: BookViewModel
+    private lateinit var viewmodel: BookViewModel
+    private   var latestProgress : Int? = null
 
-     private var handler : Handler= Handler(Looper.getMainLooper()){
+     private var handler : Handler= Handler(Looper.getMainLooper()){ it ->
          if(isBounded && binder.isPlaying){
             it.obj?.let {
                 val bp = it as PlayerService.BookProgress
@@ -39,13 +41,17 @@ class MainActivity : AppCompatActivity() {
                 findViewById<SeekBar>(R.id.seekbar).setProgress(
                     bp.progress, true
                 )
+                 latestProgress = bp.progress
             }
+
          }
+
+
          true
      }
 
 
-    /** Defines callbacks for service binding, passed to bindService()  */
+
     private val connection = object : ServiceConnection {
 
 
@@ -61,6 +67,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             isBounded = false
+
         }
     }
 
@@ -92,41 +99,26 @@ class MainActivity : AppCompatActivity() {
         super.onBackPressed()
         viewmodel.updateBook(null)
 
-        // stop if playing
-        if(binder.isPlaying){
-            binder.stop()
-        }
+//        // stop if playing
+//        if(binder.isPlaying){
+//            binder.stop()
+//        }
+//
+//        findViewById<SeekBar>(R.id.seekbar).setProgress(0, true)
 
-        findViewById<SeekBar>(R.id.seekbar).setProgress(0, true)
 
-
-
-    }
-
-    private fun hasBookBeenDownloaded(id:Int): Boolean {
-        val downloaded = applicationContext.getExternalFilesDir(
-            Environment.DIRECTORY_AUDIOBOOKS
-
-        )
-
-        val f = File("${downloaded?.path}/$id.mp3")
-
-        return f.exists()
 
     }
+
+
+
+
 
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-
-
-
-
-
-
 
 
         viewmodel = ViewModelProvider(this).get(BookViewModel::class.java)
@@ -144,7 +136,7 @@ class MainActivity : AppCompatActivity() {
             val bl = BookList()
             val possibleQuery = getPreferences(Context.MODE_PRIVATE).getString("QUERY", "")
             if ( possibleQuery != "") {
-                bl.generateBooks("a"){
+                bl.generateBooks(""){
                     searchBooks(possibleQuery!!)
                 }
             }
@@ -171,17 +163,33 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        //TODO: Save position of playing books
-        
+
         viewmodel.selectedBook.observe(this){
 
             if(it != null){
 
+                if(isBounded){
+                    if(binder.isPlaying ){
+                        binder.stop()
+                    }
+                }
+
                 val book = searchBooksWithId(it.id)
+                val p = loadBookProgress(book.id)
+                Log.d("ALEX", "Loaded BOOK PROGRESS WITH ${book.id} progress $p ")
+                val startPosition = if (p != -1) {p }else {0}
+
+
+                findViewById<SeekBar>(R.id.seekbar).setProgress(startPosition, true)
+
+
 
 
                 findViewById<Button>(R.id.play).setOnClickListener {
-                    Log.d("ALEX", "HAS BEEN DOWNLOADED ${hasBookBeenDownloaded(book.id).toString()} ")
+
+
+
+
                     if(hasBookBeenDownloaded(book.id)){
                         val downloaded = applicationContext.getExternalFilesDir(
                             Environment.DIRECTORY_AUDIOBOOKS
@@ -189,9 +197,10 @@ class MainActivity : AppCompatActivity() {
                         )
 
                         val f = File("${downloaded?.path}/${book.id}.mp3")
-                        Log.d("ALEX", "PLAYING FROM FILE")
+
+
                         binder.play(
-                            f,0
+                            f, startPosition
                         )
                     }else{
                         if(isBounded){
@@ -227,6 +236,9 @@ class MainActivity : AppCompatActivity() {
 
                 })
                 findViewById<Button>(R.id.pause).setOnClickListener {
+                        //TODO: save progress with book id
+
+                        saveBookProgress(book.id)
 
                         if(isBounded){
                             binder.pause()
@@ -271,6 +283,43 @@ class MainActivity : AppCompatActivity() {
         handleIntent(intent!!)
     }
 
+    private fun hasBookBeenDownloaded(id:Int): Boolean {
+        val downloaded = applicationContext.getExternalFilesDir(
+            Environment.DIRECTORY_AUDIOBOOKS
+
+        )
+
+        val f = File("${downloaded?.path}/$id.mp3")
+
+        return f.exists()
+
+    }
+
+
+
+    private fun saveBookProgress(id: Int) {
+        val shared = getPreferences(Context.MODE_PRIVATE)
+
+
+
+
+        if(latestProgress != null){
+            Log.d("ALEX", "SAVED BOOK PROGRESS WITH $id progress $latestProgress ")
+            with(shared.edit()){
+                putInt("BOOK/$id",latestProgress!!)
+                apply()
+            }
+        }
+
+
+    }
+
+    private fun loadBookProgress(id: Int) : Int {
+        val shared = getPreferences(Context.MODE_PRIVATE)!!
+        return shared.getInt("BOOK/$id",-1)
+
+    }
+
     private fun handleIntent(intent: Intent) {
         if (Intent.ACTION_SEARCH == intent.action) {
             intent.getStringExtra(SearchManager.QUERY)?.also { query ->
@@ -281,6 +330,7 @@ class MainActivity : AppCompatActivity() {
 
                 with(shared.edit()){
                     putString("QUERY",query)
+
                     apply()
                 }
                 searchBooks(query)
@@ -392,5 +442,8 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+
+
+
 
 }
