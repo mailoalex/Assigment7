@@ -31,25 +31,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binder: PlayerService.MediaControlBinder
     private var isBounded: Boolean = false
     private lateinit var viewmodel: BookViewModel
-    private   var latestProgress : Int? = null
+    private var latestProgress: Int? = null
 
-     private var handler : Handler= Handler(Looper.getMainLooper()){ it ->
-         if(isBounded && binder.isPlaying){
+    private var handler: Handler = Handler(Looper.getMainLooper()) { it ->
+        if (isBounded && binder.isPlaying) {
             it.obj?.let {
                 val bp = it as PlayerService.BookProgress
 
                 findViewById<SeekBar>(R.id.seekbar).setProgress(
                     bp.progress, true
                 )
-                 latestProgress = bp.progress
+                latestProgress = bp.progress
             }
 
-         }
+        }
 
 
-         true
-     }
-
+        true
+    }
 
 
     private val connection = object : ServiceConnection {
@@ -62,7 +61,7 @@ class MainActivity : AppCompatActivity() {
 
             isBounded = true
 
-           binder.setProgressHandler(handler)
+            binder.setProgressHandler(handler)
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -83,37 +82,20 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-
-
-
     private fun isSingleMode(): Boolean {
         return resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
     }
-
-
-
 
 
     override fun onBackPressed() {
         super.onBackPressed()
         viewmodel.updateBook(null)
 
-//        // stop if playing
-//        if(binder.isPlaying){
-//            binder.stop()
-//        }
-//
-//        findViewById<SeekBar>(R.id.seekbar).setProgress(0, true)
 
+        findViewById<SeekBar>(R.id.seekbar).setProgress(0, true)
 
 
     }
-
-
-
-
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -132,11 +114,11 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        if(savedInstanceState ==null) {
+        if (savedInstanceState == null) {
             val bl = BookList()
             val possibleQuery = getPreferences(Context.MODE_PRIVATE).getString("QUERY", "")
-            if ( possibleQuery != "") {
-                bl.generateBooks(""){
+            if (possibleQuery != "") {
+                bl.generateBooks("") {
                     searchBooks(possibleQuery!!)
                 }
             }
@@ -144,8 +126,8 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction()
                 .add(R.id.container1, BookListFragment.newInstance(bl))
                 .commit()
-        }else{
-            if(isSingleMode() && viewmodel.selectedBook.value != null) {
+        } else {
+            if (isSingleMode() && viewmodel.selectedBook.value != null) {
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.container1, BookDetailsFragment())
                     .setReorderingAllowed(true)
@@ -156,7 +138,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        if(!isSingleMode()  ){
+        if (!isSingleMode()) {
             supportFragmentManager.beginTransaction()
                 .add(R.id.container2, BookDetailsFragment())
                 .commit()
@@ -164,12 +146,12 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        viewmodel.selectedBook.observe(this){
+        viewmodel.selectedBook.observe(this) {
 
-            if(it != null){
+            if (it != null) {
 
-                if(isBounded){
-                    if(binder.isPlaying ){
+                if (isBounded) {
+                    if (binder.isPlaying) {
                         binder.stop()
                     }
                 }
@@ -177,7 +159,11 @@ class MainActivity : AppCompatActivity() {
                 val book = searchBooksWithId(it.id)
                 val p = loadBookProgress(book.id)
                 Log.d("ALEX", "Loaded BOOK PROGRESS WITH ${book.id} progress $p ")
-                val startPosition = if (p != -1) {p }else {0}
+                val startPosition = if (p != -1) {
+                    p
+                } else {
+                    0
+                }
 
 
                 findViewById<SeekBar>(R.id.seekbar).setProgress(startPosition, true)
@@ -188,9 +174,7 @@ class MainActivity : AppCompatActivity() {
                 findViewById<Button>(R.id.play).setOnClickListener {
 
 
-
-
-                    if(hasBookBeenDownloaded(book.id)){
+                    if (hasBookBeenDownloaded(book.id)) {
                         val downloaded = applicationContext.getExternalFilesDir(
                             Environment.DIRECTORY_AUDIOBOOKS
 
@@ -202,24 +186,21 @@ class MainActivity : AppCompatActivity() {
                         binder.play(
                             f, startPosition
                         )
-                    }else{
-                        if(isBounded){
+                    } else {
+                        if (isBounded) {
                             binder.play(book.id)
                         }
                         downloadBookWithId(book.id)
                     }
 
 
-
-
-
-
                 }
 
 
-                findViewById<SeekBar>(R.id.seekbar).setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+                findViewById<SeekBar>(R.id.seekbar).setOnSeekBarChangeListener(object :
+                    SeekBar.OnSeekBarChangeListener {
                     override fun onProgressChanged(p0: SeekBar?, p1: Int, changedByUser: Boolean) {
-                        if(changedByUser){
+                        if (changedByUser) {
                             binder.seekTo(p1)
 
                         }
@@ -236,20 +217,19 @@ class MainActivity : AppCompatActivity() {
 
                 })
                 findViewById<Button>(R.id.pause).setOnClickListener {
-                        //TODO: save progress with book id
+                    //TODO: save progress with book id
 
-                        saveBookProgress(book.id)
+                    saveBookProgress(book.id)
 
-                        if(isBounded){
-                            binder.pause()
-                        }
-
+                    if (isBounded) {
+                        binder.pause()
+                    }
 
 
                 }
                 findViewById<Button>(R.id.cancel).setOnClickListener {
 
-                    if(isBounded){
+                    if (isBounded) {
                         binder.stop()
                     }
 
@@ -260,13 +240,13 @@ class MainActivity : AppCompatActivity() {
 
 
 
-                if(isSingleMode() ) {
+                if (isSingleMode()) {
 
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.container1,fg)
+                        .replace(R.id.container1, fg)
                         .addToBackStack(null)
                         .commit()
-                }else{
+                } else {
                     supportFragmentManager.beginTransaction()
                         .replace(R.id.container2, fg)
                         .addToBackStack(null)
@@ -283,7 +263,7 @@ class MainActivity : AppCompatActivity() {
         handleIntent(intent!!)
     }
 
-    private fun hasBookBeenDownloaded(id:Int): Boolean {
+    private fun hasBookBeenDownloaded(id: Int): Boolean {
         val downloaded = applicationContext.getExternalFilesDir(
             Environment.DIRECTORY_AUDIOBOOKS
 
@@ -296,17 +276,16 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     private fun saveBookProgress(id: Int) {
         val shared = getPreferences(Context.MODE_PRIVATE)
 
 
 
 
-        if(latestProgress != null){
+        if (latestProgress != null) {
             Log.d("ALEX", "SAVED BOOK PROGRESS WITH $id progress $latestProgress ")
-            with(shared.edit()){
-                putInt("BOOK/$id",latestProgress!!)
+            with(shared.edit()) {
+                putInt("BOOK/$id", latestProgress!!)
                 apply()
             }
         }
@@ -314,9 +293,9 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun loadBookProgress(id: Int) : Int {
+    private fun loadBookProgress(id: Int): Int {
         val shared = getPreferences(Context.MODE_PRIVATE)!!
-        return shared.getInt("BOOK/$id",-1)
+        return shared.getInt("BOOK/$id", -1)
 
     }
 
@@ -325,11 +304,10 @@ class MainActivity : AppCompatActivity() {
             intent.getStringExtra(SearchManager.QUERY)?.also { query ->
 
 
+                val shared = getPreferences(Context.MODE_PRIVATE) ?: return
 
-                val shared = getPreferences(Context.MODE_PRIVATE)?: return
-
-                with(shared.edit()){
-                    putString("QUERY",query)
+                with(shared.edit()) {
+                    putString("QUERY", query)
 
                     apply()
                 }
@@ -341,33 +319,31 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     private fun downloadBookWithId(id: Int) {
 
         runBlocking {
 
-            withContext(Dispatchers.IO){
+            withContext(Dispatchers.IO) {
                 val req = DownloadManager.Request(
                     Uri.parse("https://kamorris.com/lab/audlib/download.php?id=$id")
                 )
                 req.setTitle("downloading book $id")
                 req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
-                req.setDestinationInExternalFilesDir(applicationContext, Environment.DIRECTORY_AUDIOBOOKS,
+                req.setDestinationInExternalFilesDir(
+                    applicationContext, Environment.DIRECTORY_AUDIOBOOKS,
                     "$id.mp3"
                 )
 
-                val manager = applicationContext.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+                val manager =
+                    applicationContext.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
                 manager.enqueue(req)
             }
 
         }
 
 
-
-
     }
-
 
 
     private fun searchBooks(query: String): BookList {
@@ -392,7 +368,7 @@ class MainActivity : AppCompatActivity() {
                             book.getInt("duration")
 
 
-                            )
+                        )
                     )
 
                 }
@@ -413,15 +389,15 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun searchBooksWithId(id: Int) : Book{
+    private fun searchBooksWithId(id: Int): Book {
         supportFragmentManager.popBackStack()
-        val book : Book
+        val book: Book
         runBlocking {
 
             withContext(Dispatchers.IO) {
                 val url = URL("https://kamorris.com/lab/cis3515/book.php?id=$id")
 
-                 val obj = JSONObject(url.readText())
+                val obj = JSONObject(url.readText())
 
                 book = Book(
                     obj.getString("title"),
@@ -434,16 +410,11 @@ class MainActivity : AppCompatActivity() {
             }
 
 
-
-
-
         }
         return book
 
 
     }
-
-
 
 
 }
